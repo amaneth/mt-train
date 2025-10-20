@@ -1,2 +1,6 @@
+torch
 transformers
+datasets
 sconf
+pyyaml
+accelerate
