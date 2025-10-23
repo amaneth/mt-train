@@ -11,8 +11,14 @@ from datasets import load_from_disk
 from huggingface_hub import HfFolder, login
 import argparse
 from sconf import Config
+import evaluate
+import numpy as np
+
 
 login(token=os.getenv("HF_TOKEN") or HfFolder.get_token())
+
+
+
 
 def main(config_path="config.yaml", processed_data_dir="data/tokenized"):
     # Load config using sconf
@@ -26,6 +32,18 @@ def main(config_path="config.yaml", processed_data_dir="data/tokenized"):
         use_cache=config.model.use_cache,
     )
     tokenizer = AutoTokenizer.from_pretrained(config.model.name)
+
+    bleu = evaluate.load("bleu")
+
+    def compute_metrics(eval_pred):
+        preds, labels = eval_pred
+        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+        
+        # BLEU expects a list of hypotheses and list of list of references
+        result = bleu.compute(predictions=decoded_preds, references=[[l] for l in decoded_labels])
+        
+        return {"bleu": result["bleu"]}
 
     # Load tokenized datasets
     print("Loading preprocessed datasets...")
@@ -53,6 +71,9 @@ def main(config_path="config.yaml", processed_data_dir="data/tokenized"):
         eval_strategy=config.training.eval_strategy,
         eval_steps=config.training.eval_steps,
         save_strategy=config.training.save_strategy,
+        load_best_model_at_end=True,
+        metric_for_best_model="bleu",
+        greater_is_better=True,
         logging_steps=config.training.logging_steps,
         report_to=config.training.report_to,
         push_to_hub=config.training.push_to_hub,
@@ -67,6 +88,8 @@ def main(config_path="config.yaml", processed_data_dir="data/tokenized"):
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
+        tokenizer=tokenizer,
+        compute_metrics=compute_metrics,
     )
 
     # Train
