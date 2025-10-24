@@ -25,25 +25,15 @@ def main(config_path="config.yaml", processed_data_dir="data/tokenized"):
     config = Config(config_path)
 
     # Load model and tokenizer
-    print("Loading model and tokenizer...")
+    print("Loading the model...")
     model = AutoModelForSeq2SeqLM.from_pretrained(
         config.model.name,
         device_map=config.model.device_map,
         use_cache=config.model.use_cache,
     )
-    tokenizer = AutoTokenizer.from_pretrained(config.model.name)
+    # tokenizer = AutoTokenizer.from_pretrained(config.model.name)
 
-    bleu = evaluate.load("bleu")
 
-    def compute_metrics(eval_pred):
-        preds, labels = eval_pred
-        decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
-        
-        # BLEU expects a list of hypotheses and list of list of references
-        result = bleu.compute(predictions=decoded_preds, references=[[l] for l in decoded_labels])
-        
-        return {"bleu": result["bleu"]}
 
     # Load tokenized datasets
     print("Loading preprocessed datasets...")
@@ -72,8 +62,8 @@ def main(config_path="config.yaml", processed_data_dir="data/tokenized"):
         eval_steps=config.training.eval_steps,
         save_strategy=config.training.save_strategy,
         load_best_model_at_end=True,
-        metric_for_best_model="bleu",
-        greater_is_better=True,
+        metric_for_best_model="eval_loss",
+        greater_is_better=False,
         logging_steps=config.training.logging_steps,
         report_to=config.training.report_to,
         push_to_hub=config.training.push_to_hub,
@@ -88,8 +78,6 @@ def main(config_path="config.yaml", processed_data_dir="data/tokenized"):
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
-        tokenizer=tokenizer,
-        compute_metrics=compute_metrics,
     )
 
     # Train
