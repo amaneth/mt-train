@@ -53,11 +53,14 @@ def preprocess_data(config_path="config.yaml", output_dir="data/tokenized"):
     valid_ds = load_dataset(config["datasets"]["validation"]["name"], split=config["datasets"]["validation"]["split"])
 
 
-    # Test for small dataset
-    train_ds = train_ds.filter(lambda example : example["src_lang"] in ["eng_Latn", "amh_Ethi", "swh_Latn"] and example["tgt_lang"] in ["eng_Latn", "amh_Ethi", "swh_Latn"])
-    train_ds = train_ds.shuffle(seed=42).select(range(0,4000))
-    valid_ds = valid_ds.filter(lambda example : example["src_lang"] in ["eng_Latn", "amh_Ethi", "swh_Latn"] and example["tgt_lang"] in ["eng_Latn", "amh_Ethi", "swh_Latn"])
-    valid_ds = valid_ds.shuffle(seed=42).select(range(0,10))
+    # # Test for small dataset
+    # train_ds = train_ds.filter(lambda example : example["src_lang"] in ["eng_Latn", "amh_Ethi", "swh_Latn"] and example["tgt_lang"] in ["eng_Latn", "amh_Ethi", "swh_Latn"])
+    # train_ds = train_ds.shuffle(seed=42).select(range(0,4000))
+    # valid_ds = valid_ds.filter(lambda example : example["src_lang"] in ["eng_Latn", "amh_Ethi", "swh_Latn"] and example["tgt_lang"] in ["eng_Latn", "amh_Ethi", "swh_Latn"])
+    # valid_ds = valid_ds.shuffle(seed=42).select(range(0,10))
+
+    train_ds = train_ds.filter(lambda example: (example["src_lang"] == "eng_Latn" and example["tgt_lang"] == "amh_Ethi") or (example["src_lang"] == "amh_Ethi" and example["tgt_lang"] == "eng_Latn")) 
+    valid_ds = valid_ds.filter(lambda example: (example["src_lang"] == "eng_Latn" and example["tgt_lang"] == "amh_Ethi") or (example["src_lang"] == "amh_Ethi" and example["tgt_lang"] == "eng_Latn"))
 
     # Tokenize
     print("Tokenizing training data...")
