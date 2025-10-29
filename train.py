@@ -6,6 +6,7 @@ from transformers import (
     AutoTokenizer,
     Seq2SeqTrainingArguments,
     Seq2SeqTrainer,
+    EarlyStoppingCallback
 )
 from datasets import load_from_disk
 from huggingface_hub import HfFolder, login
@@ -78,6 +79,7 @@ def main(config_path="config.yaml", processed_data_dir="data/tokenized"):
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=config.training.early_stopping_patience)]
     )
 
     # Train

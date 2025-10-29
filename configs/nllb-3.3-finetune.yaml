@@ -41,15 +41,17 @@ training:
   fp16_full_eval: true
   lr_scheduler_type: "constant"
   eval_strategy: "steps"      # options: "steps", "epoch"
-  eval_steps: 10
+  eval_steps: 50
   save_strategy: "steps"
-  save_steps: 10
+  save_steps: 50
   save_total_limit: 2
-  logging_steps: 10
+  logging_steps: 50
   report_to: "tensorboard"           # options: "tensorboard", "wandb", "none"
   push_to_hub: true
   private_repo: true
   strategy: "every_save"
+  early_stopping_patience: 10
 output:
   hf_username: "amaniopia"
   dir: "amaniopia/nllb-200-3.3B-finetuned"
+
